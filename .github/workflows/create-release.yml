@@ -39,7 +39,10 @@ jobs:
           git branch release/${{ inputs.new_version }}
           echo 'new_branch=release/${{ inputs.new_version }}' >> $GITHUB_OUTPUT
       - name: Push new release branch
-        run: git push
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          branch: release/${{ inputs.new_version }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
   
   configure-release-branch:
     name: Configure new release branch
