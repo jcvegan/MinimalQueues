@@ -1,0 +1,60 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        type: string
+        description: The next version to release (SemVer without prefix)
+        required: true
+      replase_as_base_branch:
+        type: boolean
+        description: Make this branch the newest
+        default: true
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  create-release:
+    name: Create release
+    runs-on: ubuntu-latest
+
+    outputs:
+      new_release_branch: ${{ steps.release-branch.outputs.new_branch }}
+    
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v3
+      - name: Create new release branch
+        id: release-branch
+        run: |
+          git branch release/${{ inputs.new_version }}
+          echo 'new_branch=release/${{ inputs.new_version }}' >> $GITHUB_OUTPUT
+  
+  configure-release-branch:
+    name: Configure new release branch
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+      packages: write
+    
+    steps:
+      - name: Configure as default
+        if: ${{ inputs.replase_as_base_branch }} == 'true'
+        uses: liyanchang/default-branch-migration@v1.0.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          previous_default: ${{ github.ref_name }}
+          new_default: ${{ needs.create-release.outputs.new_release_branch }}
