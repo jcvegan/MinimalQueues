@@ -38,6 +38,8 @@ jobs:
         run: |
           git branch release/${{ inputs.new_version }}
           echo 'new_branch=release/${{ inputs.new_version }}' >> $GITHUB_OUTPUT
+      - name: Push new release branch
+        run: git push
   
   configure-release-branch:
     name: Configure new release branch
@@ -51,10 +53,10 @@ jobs:
       packages: write
     
     steps:
-      - name: Configure as default
-        if: ${{ inputs.replase_as_base_branch }} == 'true'
-        uses: liyanchang/default-branch-migration@v1.0.1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          previous_default: ${{ github.ref_name }}
-          new_default: ${{ needs.create-release.outputs.new_release_branch }}
+      - name: Set release branch as default
+        run: |
+          curl -X PATCH \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/:owner/:repo \
+          -d '{"default_branch":"${{ needs.create-release.outputs.new_release_branch }}"}'
