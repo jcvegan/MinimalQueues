@@ -42,7 +42,7 @@ jobs:
         uses: ad-m/github-push-action@v0.6.0
         with:
           branch: release/${{ inputs.new_version }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT }}
   
   configure-release-branch:
     name: Configure new release branch
@@ -59,7 +59,7 @@ jobs:
       - name: Set release branch as default
         run: |
           curl -X PATCH \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Authorization: Bearer ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/:owner/:repo \
           -d '{"default_branch":"${{ needs.create-release.outputs.new_release_branch }}"}'
